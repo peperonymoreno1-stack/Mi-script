@@ -1,0 +1,194 @@
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "MenuGUI"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 220, 0, 320)
+frame.Position = UDim2.new(0, 20, 0.5, -160)
+frame.BackgroundColor3 = Color3.fromRGB(80, 0, 120)
+frame.BorderSizePixel = 0
+frame.Active = true
+frame.Draggable = true
+frame.Parent = screenGui
+
+local stroke = Instance.new("UIStroke")
+stroke.Color = Color3.fromRGB(180, 0, 255)
+stroke.Thickness = 3
+stroke.Parent = frame
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 6)
+
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 40)
+title.BackgroundColor3 = Color3.fromRGB(60, 0, 100)
+title.BorderSizePixel = 0
+title.Text = "⚡ Menu"
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextSize = 16
+title.Font = Enum.Font.GothamBold
+title.Parent = frame
+Instance.new("UICorner", title).CornerRadius = UDim.new(0, 6)
+
+local function crearBoton(nombre, posY)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 180, 0, 38)
+    btn.Position = UDim2.new(0.5, -90, 0, posY)
+    btn.BackgroundColor3 = Color3.fromRGB(110, 0, 160)
+    btn.BorderSizePixel = 0
+    btn.Text = nombre
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.TextSize = 14
+    btn.Font = Enum.Font.Gotham
+    btn.Parent = frame
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 5)
+    local s = Instance.new("UIStroke")
+    s.Color = Color3.fromRGB(180, 0, 255)
+    s.Thickness = 1.5
+    s.Parent = btn
+    btn.MouseEnter:Connect(function() btn.BackgroundColor3 = Color3.fromRGB(150, 0, 210) end)
+    btn.MouseLeave:Connect(function() btn.BackgroundColor3 = Color3.fromRGB(110, 0, 160) end)
+    return btn
+end
+
+local btnVelocidad = crearBoton("🚀 Speed x2",   55)
+local btnSalto     = crearBoton("⬆️ Super Salto", 105)
+local btnVolar     = crearBoton("🦅 Volar",       155)
+local btnInvisible = crearBoton("👻 Invisible",   205)
+local btnReset     = crearBoton("🔄 Reset Todo",  260)
+
+local volando = false
+local invisible = false
+local flyConnection = nil
+
+local function getChar() return player.Character end
+
+-- VOLAR CORREGIDO
+local function activarVuelo()
+    local char = getChar()
+    if not char then return end
+    local root = char:FindFirstChild("HumanoidRootPart")
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if not root or not hum then return end
+
+    hum.PlatformStand = true
+
+    local bv = Instance.new("BodyVelocity")
+    bv.Name = "FlyVelocity"
+    bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+    bv.Velocity = Vector3.new(0, 0, 0)
+    bv.Parent = root
+
+    local bg = Instance.new("BodyGyro")
+    bg.Name = "FlyGyro"
+    bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+    bg.P = 1e4
+    bg.CFrame = root.CFrame
+    bg.Parent = root
+
+    flyConnection = RunService.Heartbeat:Connect(function()
+        if not volando then return end
+        local char2 = getChar()
+        if not char2 then return end
+        local root2 = char2:FindFirstChild("HumanoidRootPart")
+        local bv2 = root2 and root2:FindFirstChild("FlyVelocity")
+        local bg2 = root2 and root2:FindFirstChild("FlyGyro")
+        if not bv2 or not bg2 then return end
+
+        local cam = workspace.CurrentCamera
+        local dir = Vector3.new(0, 0, 0)
+        local speed = 50
+
+        if UserInputService:IsKeyDown(Enum.KeyCode.W) then dir = dir + cam.CFrame.LookVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.S) then dir = dir - cam.CFrame.LookVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.A) then dir = dir - cam.CFrame.RightVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.D) then dir = dir + cam.CFrame.RightVector end
+        if UserInputService:IsKeyDown(Enum.KeyCode.Space) then dir = dir + Vector3.new(0, 1, 0) end
+        if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then dir = dir - Vector3.new(0, 1, 0) end
+
+        bv2.Velocity = dir.Magnitude > 0 and dir.Unit * speed or Vector3.new(0, 0, 0)
+        bg2.CFrame = cam.CFrame
+    end)
+end
+
+local function desactivarVuelo()
+    if flyConnection then flyConnection:Disconnect(); flyConnection = nil end
+    local char = getChar()
+    if not char then return end
+    local root = char:FindFirstChild("HumanoidRootPart")
+    if root then
+        local bv = root:FindFirstChild("FlyVelocity")
+        local bg = root:FindFirstChild("FlyGyro")
+        if bv then bv:Destroy() end
+        if bg then bg:Destroy() end
+    end
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if hum then hum.PlatformStand = false end
+end
+
+-- INVISIBLE CORREGIDO
+local function setInvisible(state)
+    local char = getChar()
+    if not char then return end
+    for _, obj in pairs(char:GetDescendants()) do
+        if obj:IsA("BasePart") or obj:IsA("MeshPart") or obj:IsA("SpecialMesh") then
+            if obj.Name ~= "HumanoidRootPart" then
+                obj.Transparency = state and 1 or 0
+            end
+        end
+        if obj:IsA("Decal") then
+            obj.Transparency = state and 1 or 0
+        end
+    end
+end
+
+btnVolar.MouseButton1Click:Connect(function()
+    volando = not volando
+    btnVolar.Text = volando and "🦅 Volar ✅" or "🦅 Volar"
+    if volando then activarVuelo() else desactivarVuelo() end
+end)
+
+btnInvisible.MouseButton1Click:Connect(function()
+    invisible = not invisible
+    btnInvisible.Text = invisible and "👻 Invisible ✅" or "👻 Invisible"
+    setInvisible(invisible)
+end)
+
+btnVelocidad.MouseButton1Click:Connect(function()
+    local hum = getChar() and getChar():FindFirstChildOfClass("Humanoid")
+    if not hum then return end
+    hum.WalkSpeed = hum.WalkSpeed == 16 and 32 or 16
+    btnVelocidad.Text = hum.WalkSpeed == 32 and "🚀 Speed x2 ✅" or "🚀 Speed x2"
+end)
+
+btnSalto.MouseButton1Click:Connect(function()
+    local hum = getChar() and getChar():FindFirstChildOfClass("Humanoid")
+    if not hum then return end
+    hum.JumpPower = hum.JumpPower == 50 and 120 or 50
+    btnSalto.Text = hum.JumpPower == 120 and "⬆️ Super Salto ✅" or "⬆️ Super Salto"
+end)
+
+btnReset.MouseButton1Click:Connect(function()
+    volando = false
+    invisible = false
+    desactivarVuelo()
+    setInvisible(false)
+    local hum = getChar() and getChar():FindFirstChildOfClass("Humanoid")
+    if hum then hum.WalkSpeed = 16; hum.JumpPower = 50 end
+    btnVelocidad.Text = "🚀 Speed x2"
+    btnSalto.Text = "⬆️ Super Salto"
+    btnVolar.Text = "🦅 Volar"
+    btnInvisible.Text = "👻 Invisible"
+end)
+
+player.CharacterAdded:Connect(function()
+    volando = false
+    invisible = false
+    if flyConnection then flyConnection:Disconnect(); flyConnection = nil end
+    btnVolar.Text = "🦅 Volar"
+    btnInvisible.Text = "👻 Invisible"
+end)
