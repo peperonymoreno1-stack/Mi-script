@@ -67,7 +67,7 @@ local flyConnection = nil
 
 local function getChar() return player.Character end
 
--- VOLAR CORREGIDO
+-- VOLAR ARREGLADO
 local function activarVuelo()
     local char = getChar()
     if not char then return end
@@ -79,14 +79,15 @@ local function activarVuelo()
 
     local bv = Instance.new("BodyVelocity")
     bv.Name = "FlyVelocity"
-    bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+    bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
     bv.Velocity = Vector3.new(0, 0, 0)
     bv.Parent = root
 
     local bg = Instance.new("BodyGyro")
     bg.Name = "FlyGyro"
-    bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+    bg.MaxTorque = Vector3.new(1e5, 1e5, 1e5)
     bg.P = 1e4
+    bg.D = 100
     bg.CFrame = root.CFrame
     bg.Parent = root
 
@@ -95,23 +96,27 @@ local function activarVuelo()
         local char2 = getChar()
         if not char2 then return end
         local root2 = char2:FindFirstChild("HumanoidRootPart")
-        local bv2 = root2 and root2:FindFirstChild("FlyVelocity")
-        local bg2 = root2 and root2:FindFirstChild("FlyGyro")
+        if not root2 then return end
+        local bv2 = root2:FindFirstChild("FlyVelocity")
+        local bg2 = root2:FindFirstChild("FlyGyro")
         if not bv2 or not bg2 then return end
 
         local cam = workspace.CurrentCamera
         local dir = Vector3.new(0, 0, 0)
         local speed = 50
 
-        if UserInputService:IsKeyDown(Enum.KeyCode.W) then dir = dir + cam.CFrame.LookVector end
-        if UserInputService:IsKeyDown(Enum.KeyCode.S) then dir = dir - cam.CFrame.LookVector end
-        if UserInputService:IsKeyDown(Enum.KeyCode.A) then dir = dir - cam.CFrame.RightVector end
-        if UserInputService:IsKeyDown(Enum.KeyCode.D) then dir = dir + cam.CFrame.RightVector end
+        local look = Vector3.new(cam.CFrame.LookVector.X, 0, cam.CFrame.LookVector.Z).Unit
+        local right = Vector3.new(cam.CFrame.RightVector.X, 0, cam.CFrame.RightVector.Z).Unit
+
+        if UserInputService:IsKeyDown(Enum.KeyCode.W) then dir = dir + look end
+        if UserInputService:IsKeyDown(Enum.KeyCode.S) then dir = dir - look end
+        if UserInputService:IsKeyDown(Enum.KeyCode.A) then dir = dir - right end
+        if UserInputService:IsKeyDown(Enum.KeyCode.D) then dir = dir + right end
         if UserInputService:IsKeyDown(Enum.KeyCode.Space) then dir = dir + Vector3.new(0, 1, 0) end
         if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then dir = dir - Vector3.new(0, 1, 0) end
 
         bv2.Velocity = dir.Magnitude > 0 and dir.Unit * speed or Vector3.new(0, 0, 0)
-        bg2.CFrame = cam.CFrame
+        bg2.CFrame = CFrame.new(root2.Position, root2.Position + look)
     end)
 end
 
@@ -130,22 +135,29 @@ local function desactivarVuelo()
     if hum then hum.PlatformStand = false end
 end
 
--- INVISIBLE CORREGIDO
-local function setInvisible(state)
+-- INVISIBLE ARREGLADO
+local function setNetworkInvisible(state)
     local char = getChar()
     if not char then return end
     for _, obj in pairs(char:GetDescendants()) do
-        if obj:IsA("BasePart") or obj:IsA("MeshPart") or obj:IsA("SpecialMesh") then
-            if obj.Name ~= "HumanoidRootPart" then
-                obj.Transparency = state and 1 or 0
-            end
+        if (obj:IsA("BasePart") or obj:IsA("MeshPart")) and obj.Name ~= "HumanoidRootPart" then
+            obj.Transparency = state and 1 or 0
+            obj.LocalTransparencyModifier = state and 0.7 or 0
         end
         if obj:IsA("Decal") then
             obj.Transparency = state and 1 or 0
         end
+        if obj:IsA("Accessory") or obj:IsA("Hat") then
+            local handle = obj:FindFirstChild("Handle")
+            if handle then
+                handle.Transparency = state and 1 or 0
+                handle.LocalTransparencyModifier = state and 0.7 or 0
+            end
+        end
     end
 end
 
+-- BOTONES
 btnVolar.MouseButton1Click:Connect(function()
     volando = not volando
     btnVolar.Text = volando and "🦅 Volar ✅" or "🦅 Volar"
@@ -155,7 +167,7 @@ end)
 btnInvisible.MouseButton1Click:Connect(function()
     invisible = not invisible
     btnInvisible.Text = invisible and "👻 Invisible ✅" or "👻 Invisible"
-    setInvisible(invisible)
+    setNetworkInvisible(invisible)
 end)
 
 btnVelocidad.MouseButton1Click:Connect(function()
@@ -176,7 +188,7 @@ btnReset.MouseButton1Click:Connect(function()
     volando = false
     invisible = false
     desactivarVuelo()
-    setInvisible(false)
+    setNetworkInvisible(false)
     local hum = getChar() and getChar():FindFirstChildOfClass("Humanoid")
     if hum then hum.WalkSpeed = 16; hum.JumpPower = 50 end
     btnVelocidad.Text = "🚀 Speed x2"
