@@ -8,58 +8,6 @@ screenGui.Name = "MenuGUI"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = playerGui
 
--- GATITO FLOTANTE
-local gatito = Instance.new("TextButton")
-gatito.Size = UDim2.new(0, 45, 0, 45)
-gatito.Position = UDim2.new(0, 20, 0.5, 0)
-gatito.BackgroundColor3 = Color3.fromRGB(100, 0, 200)
-gatito.Text = "😸"
-gatito.TextSize = 26
-gatito.Font = Enum.Font.GothamBold
-gatito.BorderSizePixel = 0
-gatito.ZIndex = 10
-gatito.Visible = false
-gatito.Parent = screenGui
-Instance.new("UICorner", gatito).CornerRadius = UDim.new(1, 0)
-local gatitoStroke = Instance.new("UIStroke")
-gatitoStroke.Color = Color3.fromRGB(180, 0, 255)
-gatitoStroke.Thickness = 2
-gatitoStroke.Parent = gatito
-
--- Arrastrar gatito
-local dragging = false
-local dragStart, startPos
-local moved = false
-
-gatito.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        moved = false
-        dragStart = input.Position
-        startPos = gatito.Position
-    end
-end)
-UserInputService.InputChanged:Connect(function(input)
-    if dragging and (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMove) then
-        local delta = input.Position - dragStart
-        if delta.Magnitude > 5 then moved = true end
-        gatito.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
-end)
-gatito.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = false
-    end
-end)
-
--- Click gatito abre menú
-gatito.MouseButton1Click:Connect(function()
-    if not moved then
-        gatito.Visible = false
-        main.Visible = true
-    end
-end)
-
 -- MENÚ PRINCIPAL
 local main = Instance.new("Frame")
 main.Size = UDim2.new(0, 300, 0, 340)
@@ -102,9 +50,64 @@ btnX.ZIndex = 5
 btnX.Parent = main
 Instance.new("UICorner", btnX).CornerRadius = UDim.new(1, 0)
 
+-- GATITO FLOTANTE
+local gatito = Instance.new("TextButton")
+gatito.Size = UDim2.new(0, 45, 0, 45)
+gatito.Position = UDim2.new(0, 20, 0.5, 0)
+gatito.BackgroundColor3 = Color3.fromRGB(100, 0, 200)
+gatito.Text = "😸"
+gatito.TextSize = 26
+gatito.Font = Enum.Font.GothamBold
+gatito.BorderSizePixel = 0
+gatito.ZIndex = 10
+gatito.Visible = false
+gatito.Parent = screenGui
+Instance.new("UICorner", gatito).CornerRadius = UDim.new(1, 0)
+local gatitoStroke = Instance.new("UIStroke")
+gatitoStroke.Color = Color3.fromRGB(180, 0, 255)
+gatitoStroke.Thickness = 2
+gatitoStroke.Parent = gatito
+
 btnX.MouseButton1Click:Connect(function()
     main.Visible = false
     gatito.Visible = true
+end)
+
+local dragging = false
+local dragStart, startPos
+local moved = false
+
+gatito.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        moved = false
+        dragStart = input.Position
+        startPos = gatito.Position
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMove) then
+        local delta = input.Position - dragStart
+        if delta.Magnitude > 8 then moved = true end
+        gatito.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+        if dragging and not moved then
+            gatito.Visible = false
+            main.Visible = true
+        end
+        dragging = false
+        moved = false
+    end
 end)
 
 -- PANEL IZQUIERDO
@@ -227,41 +230,42 @@ local invisible = false
 local flyConnection = nil
 local function getChar() return player.Character end
 
+-- FLY
 local function activarVuelo()
     local char = getChar()
     if not char then return end
     local root = char:FindFirstChild("HumanoidRootPart")
     local hum = char:FindFirstChildOfClass("Humanoid")
     if not root or not hum then return end
+
     hum.PlatformStand = true
-    local bg = Instance.new("BodyGyro")
-    bg.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
-    bg.P = 9e4
-    bg.CFrame = root.CFrame
-    bg.Parent = root
-    local bv = Instance.new("BodyVelocity")
-    bv.Velocity = Vector3.new(0, 0, 0)
-    bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
-    bv.Parent = root
+    root.Anchored = true
+
     flyConnection = RunService.Heartbeat:Connect(function()
         if not volando then return end
         local char2 = getChar()
         if not char2 then return end
         local root2 = char2:FindFirstChild("HumanoidRootPart")
-        local bv2 = root2 and root2:FindFirstChild("BodyVelocity")
-        local bg2 = root2 and root2:FindFirstChild("BodyGyro")
-        if not bv2 or not bg2 then return end
+        if not root2 then return end
+
         local cam = workspace.CurrentCamera
         local speed = 3
         local move = Vector3.new(0, 0, 0)
-        if UserInputService:IsKeyDown(Enum.KeyCode.W) then move = move + cam.CFrame.LookVector end
-        if UserInputService:IsKeyDown(Enum.KeyCode.S) then move = move - cam.CFrame.LookVector end
-        if UserInputService:IsKeyDown(Enum.KeyCode.A) then move = move - cam.CFrame.RightVector end
-        if UserInputService:IsKeyDown(Enum.KeyCode.D) then move = move + cam.CFrame.RightVector end
+
+        local look = Vector3.new(cam.CFrame.LookVector.X, 0, cam.CFrame.LookVector.Z)
+        local right = Vector3.new(cam.CFrame.RightVector.X, 0, cam.CFrame.RightVector.Z)
+
+        if look.Magnitude > 0 then look = look.Unit end
+        if right.Magnitude > 0 then right = right.Unit end
+
+        if UserInputService:IsKeyDown(Enum.KeyCode.W) then move = move + look end
+        if UserInputService:IsKeyDown(Enum.KeyCode.S) then move = move - look end
+        if UserInputService:IsKeyDown(Enum.KeyCode.A) then move = move - right end
+        if UserInputService:IsKeyDown(Enum.KeyCode.D) then move = move + right end
         if UserInputService:IsKeyDown(Enum.KeyCode.Space) then move = move + Vector3.new(0,1,0) end
         if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then move = move - Vector3.new(0,1,0) end
-        bv2.Velocity = move.Magnitude > 0 and move.Unit * speed or Vector3.new(0, 0, 0)
-        bg2.CFrame = cam.CFrame
+
+        root2.CFrame = root2.CFrame + move * speed
     end)
 end
 
@@ -270,12 +274,7 @@ local function desactivarVuelo()
     local char = getChar()
     if not char then return end
     local root = char:FindFirstChild("HumanoidRootPart")
-    if root then
-        local bv = root:FindFirstChild("BodyVelocity")
-        local bg = root:FindFirstChild("BodyGyro")
-        if bv then bv:Destroy() end
-        if bg then bg:Destroy() end
-    end
+    if root then root.Anchored = false end
     local hum = char:FindFirstChildOfClass("Humanoid")
     if hum then hum.PlatformStand = false end
 end
