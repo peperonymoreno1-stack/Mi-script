@@ -8,63 +8,171 @@ screenGui.Name = "MenuGUI"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = playerGui
 
-local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 220, 0, 320)
-frame.Position = UDim2.new(0, 20, 0.5, -160)
-frame.BackgroundColor3 = Color3.fromRGB(80, 0, 120)
-frame.BorderSizePixel = 0
-frame.Active = true
-frame.Draggable = true
-frame.Parent = screenGui
+-- FONDO PRINCIPAL
+local main = Instance.new("Frame")
+main.Size = UDim2.new(0, 380, 0, 420)
+main.Position = UDim2.new(0.5, -190, 0.5, -210)
+main.BackgroundColor3 = Color3.fromRGB(15, 0, 30)
+main.BorderSizePixel = 0
+main.Active = true
+main.Draggable = true
+main.Parent = screenGui
+Instance.new("UICorner", main).CornerRadius = UDim.new(0, 8)
+local mainStroke = Instance.new("UIStroke")
+mainStroke.Color = Color3.fromRGB(150, 0, 255)
+mainStroke.Thickness = 2
+mainStroke.Parent = main
 
-local stroke = Instance.new("UIStroke")
-stroke.Color = Color3.fromRGB(180, 0, 255)
-stroke.Thickness = 3
-stroke.Parent = frame
-Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 6)
-
+-- TÍTULO
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, 0, 0, 40)
-title.BackgroundColor3 = Color3.fromRGB(60, 0, 100)
+title.Size = UDim2.new(1, 0, 0, 45)
+title.BackgroundColor3 = Color3.fromRGB(25, 0, 50)
 title.BorderSizePixel = 0
 title.Text = "🐱 GATITO HUB"
-title.TextColor3 = Color3.fromRGB(255, 255, 255)
-title.TextSize = 16
+title.TextColor3 = Color3.fromRGB(200, 100, 255)
+title.TextSize = 18
 title.Font = Enum.Font.GothamBold
-title.Parent = frame
-Instance.new("UICorner", title).CornerRadius = UDim.new(0, 6)
+title.Parent = main
+Instance.new("UICorner", title).CornerRadius = UDim.new(0, 8)
 
-local function crearBoton(nombre, posY)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0, 180, 0, 38)
-    btn.Position = UDim2.new(0.5, -90, 0, posY)
-    btn.BackgroundColor3 = Color3.fromRGB(110, 0, 160)
-    btn.BorderSizePixel = 0
-    btn.Text = nombre
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.TextSize = 14
-    btn.Font = Enum.Font.Gotham
-    btn.Parent = frame
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 5)
-    local s = Instance.new("UIStroke")
-    s.Color = Color3.fromRGB(180, 0, 255)
-    s.Thickness = 1.5
-    s.Parent = btn
-    btn.MouseEnter:Connect(function() btn.BackgroundColor3 = Color3.fromRGB(150, 0, 210) end)
-    btn.MouseLeave:Connect(function() btn.BackgroundColor3 = Color3.fromRGB(110, 0, 160) end)
-    return btn
+-- BOTÓN CERRAR
+local btnClose = Instance.new("TextButton")
+btnClose.Size = UDim2.new(0, 30, 0, 30)
+btnClose.Position = UDim2.new(1, -35, 0, 7)
+btnClose.BackgroundColor3 = Color3.fromRGB(150, 0, 255)
+btnClose.Text = "✕"
+btnClose.TextColor3 = Color3.fromRGB(255, 255, 255)
+btnClose.TextSize = 14
+btnClose.Font = Enum.Font.GothamBold
+btnClose.BorderSizePixel = 0
+btnClose.Parent = main
+Instance.new("UICorner", btnClose).CornerRadius = UDim.new(0, 6)
+btnClose.MouseButton1Click:Connect(function() screenGui:Destroy() end)
+
+-- PANEL IZQUIERDO (pestañas)
+local leftPanel = Instance.new("Frame")
+leftPanel.Size = UDim2.new(0, 100, 1, -45)
+leftPanel.Position = UDim2.new(0, 0, 0, 45)
+leftPanel.BackgroundColor3 = Color3.fromRGB(20, 0, 40)
+leftPanel.BorderSizePixel = 0
+leftPanel.Parent = main
+Instance.new("UICorner", leftPanel).CornerRadius = UDim.new(0, 8)
+
+-- PANEL DERECHO (contenido)
+local rightPanel = Instance.new("Frame")
+rightPanel.Size = UDim2.new(1, -108, 1, -55)
+rightPanel.Position = UDim2.new(0, 105, 0, 50)
+rightPanel.BackgroundColor3 = Color3.fromRGB(15, 0, 30)
+rightPanel.BorderSizePixel = 0
+rightPanel.Parent = main
+
+-- PÁGINAS
+local pages = {}
+
+local function crearPagina()
+    local page = Instance.new("Frame")
+    page.Size = UDim2.new(1, 0, 1, 0)
+    page.BackgroundTransparency = 1
+    page.Visible = false
+    page.Parent = rightPanel
+    return page
 end
 
-local btnVelocidad = crearBoton("🚀 Speed x2",   55)
-local btnSalto     = crearBoton("⬆️ Super Salto", 105)
-local btnVolar     = crearBoton("🦅 Volar",       155)
-local btnInvisible = crearBoton("👻 Invisible",   205)
-local btnReset     = crearBoton("🔄 Reset Todo",  260)
+-- FUNCIÓN TOGGLE
+local function crearToggle(parent, texto, posY, callback)
+    local row = Instance.new("Frame")
+    row.Size = UDim2.new(1, -10, 0, 40)
+    row.Position = UDim2.new(0, 5, 0, posY)
+    row.BackgroundColor3 = Color3.fromRGB(30, 0, 55)
+    row.BorderSizePixel = 0
+    row.Parent = parent
+    Instance.new("UICorner", row).CornerRadius = UDim.new(0, 6)
 
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, -55, 1, 0)
+    label.Position = UDim2.new(0, 10, 0, 0)
+    label.BackgroundTransparency = 1
+    label.Text = texto
+    label.TextColor3 = Color3.fromRGB(220, 220, 220)
+    label.TextSize = 13
+    label.Font = Enum.Font.Gotham
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.Parent = row
+
+    local toggleBg = Instance.new("Frame")
+    toggleBg.Size = UDim2.new(0, 40, 0, 20)
+    toggleBg.Position = UDim2.new(1, -48, 0.5, -10)
+    toggleBg.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+    toggleBg.BorderSizePixel = 0
+    toggleBg.Parent = row
+    Instance.new("UICorner", toggleBg).CornerRadius = UDim.new(1, 0)
+
+    local toggleBtn = Instance.new("Frame")
+    toggleBtn.Size = UDim2.new(0, 16, 0, 16)
+    toggleBtn.Position = UDim2.new(0, 2, 0.5, -8)
+    toggleBtn.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+    toggleBtn.BorderSizePixel = 0
+    toggleBtn.Parent = toggleBg
+    Instance.new("UICorner", toggleBtn).CornerRadius = UDim.new(1, 0)
+
+    local active = false
+    local clickArea = Instance.new("TextButton")
+    clickArea.Size = UDim2.new(1, 0, 1, 0)
+    clickArea.BackgroundTransparency = 1
+    clickArea.Text = ""
+    clickArea.Parent = row
+
+    clickArea.MouseButton1Click:Connect(function()
+        active = not active
+        if active then
+            toggleBg.BackgroundColor3 = Color3.fromRGB(130, 0, 255)
+            toggleBtn.Position = UDim2.new(1, -18, 0.5, -8)
+            toggleBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        else
+            toggleBg.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+            toggleBtn.Position = UDim2.new(0, 2, 0.5, -8)
+            toggleBtn.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+        end
+        callback(active)
+    end)
+
+    return clickArea
+end
+
+-- FUNCIÓN PESTAÑA
+local tabActiva = nil
+local function crearTab(nombre, icono, posY, page)
+    local tab = Instance.new("TextButton")
+    tab.Size = UDim2.new(1, -10, 0, 50)
+    tab.Position = UDim2.new(0, 5, 0, posY)
+    tab.BackgroundColor3 = Color3.fromRGB(30, 0, 55)
+    tab.BorderSizePixel = 0
+    tab.Text = icono .. "\n" .. nombre
+    tab.TextColor3 = Color3.fromRGB(180, 180, 180)
+    tab.TextSize = 11
+    tab.Font = Enum.Font.Gotham
+    tab.Parent = leftPanel
+    Instance.new("UICorner", tab).CornerRadius = UDim.new(0, 6)
+
+    tab.MouseButton1Click:Connect(function()
+        for _, p in pairs(pages) do p.Visible = false end
+        page.Visible = true
+        if tabActiva then
+            tabActiva.BackgroundColor3 = Color3.fromRGB(30, 0, 55)
+            tabActiva.TextColor3 = Color3.fromRGB(180, 180, 180)
+        end
+        tab.BackgroundColor3 = Color3.fromRGB(100, 0, 200)
+        tab.TextColor3 = Color3.fromRGB(255, 255, 255)
+        tabActiva = tab
+    end)
+
+    return tab
+end
+
+-- VARIABLES
 local volando = false
 local invisible = false
 local flyConnection = nil
-
 local function getChar() return player.Character end
 
 -- FLY
@@ -74,20 +182,16 @@ local function activarVuelo()
     local root = char:FindFirstChild("HumanoidRootPart")
     local hum = char:FindFirstChildOfClass("Humanoid")
     if not root or not hum then return end
-
     hum.PlatformStand = true
-
     local bg = Instance.new("BodyGyro")
     bg.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
     bg.P = 9e4
     bg.CFrame = root.CFrame
     bg.Parent = root
-
     local bv = Instance.new("BodyVelocity")
     bv.Velocity = Vector3.new(0, 0, 0)
     bv.MaxForce = Vector3.new(9e9, 9e9, 9e9)
     bv.Parent = root
-
     flyConnection = RunService.Heartbeat:Connect(function()
         if not volando then return end
         local char2 = getChar()
@@ -96,18 +200,15 @@ local function activarVuelo()
         local bv2 = root2 and root2:FindFirstChild("BodyVelocity")
         local bg2 = root2 and root2:FindFirstChild("BodyGyro")
         if not bv2 or not bg2 then return end
-
         local cam = workspace.CurrentCamera
         local speed = 3
         local move = Vector3.new(0, 0, 0)
-
         if UserInputService:IsKeyDown(Enum.KeyCode.W) then move = move + cam.CFrame.LookVector end
         if UserInputService:IsKeyDown(Enum.KeyCode.S) then move = move - cam.CFrame.LookVector end
         if UserInputService:IsKeyDown(Enum.KeyCode.A) then move = move - cam.CFrame.RightVector end
         if UserInputService:IsKeyDown(Enum.KeyCode.D) then move = move + cam.CFrame.RightVector end
         if UserInputService:IsKeyDown(Enum.KeyCode.Space) then move = move + Vector3.new(0,1,0) end
         if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then move = move - Vector3.new(0,1,0) end
-
         bv2.Velocity = move.Magnitude > 0 and move.Unit * speed or Vector3.new(0, 0, 0)
         bg2.CFrame = cam.CFrame
     end)
@@ -137,9 +238,7 @@ local function setNetworkInvisible(state)
             obj.Transparency = state and 1 or 0
             obj.LocalTransparencyModifier = state and 0.7 or 0
         end
-        if obj:IsA("Decal") then
-            obj.Transparency = state and 1 or 0
-        end
+        if obj:IsA("Decal") then obj.Transparency = state and 1 or 0 end
         if obj:IsA("Accessory") or obj:IsA("Hat") then
             local handle = obj:FindFirstChild("Handle")
             if handle then
@@ -150,50 +249,44 @@ local function setNetworkInvisible(state)
     end
 end
 
--- BOTONES
-btnVolar.MouseButton1Click:Connect(function()
-    volando = not volando
-    btnVolar.Text = volando and "🦅 Volar ✅" or "🦅 Volar"
-    if volando then activarVuelo() else desactivarVuelo() end
-end)
+-- ===== PÁGINAS =====
 
-btnInvisible.MouseButton1Click:Connect(function()
-    invisible = not invisible
-    btnInvisible.Text = invisible and "👻 Invisible ✅" or "👻 Invisible"
-    setNetworkInvisible(invisible)
-end)
-
-btnVelocidad.MouseButton1Click:Connect(function()
+-- MAIN
+local pageMain = crearPagina()
+table.insert(pages, pageMain)
+crearToggle(pageMain, "Speed x2", 10, function(state)
     local hum = getChar() and getChar():FindFirstChildOfClass("Humanoid")
-    if not hum then return end
-    hum.WalkSpeed = hum.WalkSpeed == 16 and 32 or 16
-    btnVelocidad.Text = hum.WalkSpeed == 32 and "🚀 Speed x2 ✅" or "🚀 Speed x2"
+    if hum then hum.WalkSpeed = state and 32 or 16 end
+end)
+crearToggle(pageMain, "Super Salto", 58, function(state)
+    local hum = getChar() and getChar():FindFirstChildOfClass("Humanoid")
+    if hum then hum.JumpPower = state and 120 or 50 end
 end)
 
-btnSalto.MouseButton1Click:Connect(function()
-    local hum = getChar() and getChar():FindFirstChildOfClass("Humanoid")
-    if not hum then return end
-    hum.JumpPower = hum.JumpPower == 50 and 120 or 50
-    btnSalto.Text = hum.JumpPower == 120 and "⬆️ Super Salto ✅" or "⬆️ Super Salto"
+-- EXTRA
+local pageExtra = crearPagina()
+table.insert(pages, pageExtra)
+crearToggle(pageExtra, "Volar 🦅", 10, function(state)
+    volando = state
+    if state then activarVuelo() else desactivarVuelo() end
+end)
+crearToggle(pageExtra, "Invisible 👻", 58, function(state)
+    invisible = state
+    setNetworkInvisible(state)
 end)
 
-btnReset.MouseButton1Click:Connect(function()
-    volando = false
-    invisible = false
-    desactivarVuelo()
-    setNetworkInvisible(false)
-    local hum = getChar() and getChar():FindFirstChildOfClass("Humanoid")
-    if hum then hum.WalkSpeed = 16; hum.JumpPower = 50 end
-    btnVelocidad.Text = "🚀 Speed x2"
-    btnSalto.Text = "⬆️ Super Salto"
-    btnVolar.Text = "🦅 Volar"
-    btnInvisible.Text = "👻 Invisible"
-end)
+-- TABS
+local t1 = crearTab("Main", "🏠", 10, pageMain)
+crearTab("Extra", "⭐", 68, pageExtra)
+
+-- Abrir Main por defecto
+pageMain.Visible = true
+t1.BackgroundColor3 = Color3.fromRGB(100, 0, 200)
+t1.TextColor3 = Color3.fromRGB(255, 255, 255)
+tabActiva = t1
 
 player.CharacterAdded:Connect(function()
     volando = false
     invisible = false
     if flyConnection then flyConnection:Disconnect(); flyConnection = nil end
-    btnVolar.Text = "🦅 Volar"
-    btnInvisible.Text = "👻 Invisible"
 end)
