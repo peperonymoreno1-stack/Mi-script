@@ -18,6 +18,7 @@ gatito.TextSize = 26
 gatito.Font = Enum.Font.GothamBold
 gatito.BorderSizePixel = 0
 gatito.ZIndex = 10
+gatito.Visible = false
 gatito.Parent = screenGui
 Instance.new("UICorner", gatito).CornerRadius = UDim.new(1, 0)
 local gatitoStroke = Instance.new("UIStroke")
@@ -25,25 +26,37 @@ gatitoStroke.Color = Color3.fromRGB(180, 0, 255)
 gatitoStroke.Thickness = 2
 gatitoStroke.Parent = gatito
 
--- Hacer gatito arrastrable
+-- Arrastrar gatito
 local dragging = false
 local dragStart, startPos
+local moved = false
+
 gatito.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
         dragging = true
+        moved = false
         dragStart = input.Position
         startPos = gatito.Position
     end
 end)
-gatito.InputChanged:Connect(function(input)
+UserInputService.InputChanged:Connect(function(input)
     if dragging and (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMove) then
         local delta = input.Position - dragStart
+        if delta.Magnitude > 5 then moved = true end
         gatito.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
     end
 end)
 gatito.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
         dragging = false
+    end
+end)
+
+-- Click gatito abre menú
+gatito.MouseButton1Click:Connect(function()
+    if not moved then
+        gatito.Visible = false
+        main.Visible = true
     end
 end)
 
@@ -74,6 +87,25 @@ title.TextSize = 15
 title.Font = Enum.Font.GothamBold
 title.Parent = main
 Instance.new("UICorner", title).CornerRadius = UDim.new(0, 8)
+
+-- BOTÓN X
+local btnX = Instance.new("TextButton")
+btnX.Size = UDim2.new(0, 26, 0, 26)
+btnX.Position = UDim2.new(1, -30, 0, 6)
+btnX.BackgroundColor3 = Color3.fromRGB(150, 0, 255)
+btnX.Text = "✕"
+btnX.TextColor3 = Color3.fromRGB(255, 255, 255)
+btnX.TextSize = 13
+btnX.Font = Enum.Font.GothamBold
+btnX.BorderSizePixel = 0
+btnX.ZIndex = 5
+btnX.Parent = main
+Instance.new("UICorner", btnX).CornerRadius = UDim.new(1, 0)
+
+btnX.MouseButton1Click:Connect(function()
+    main.Visible = false
+    gatito.Visible = true
+end)
 
 -- PANEL IZQUIERDO
 local leftPanel = Instance.new("Frame")
@@ -297,15 +329,6 @@ pageMain.Visible = true
 t1.BackgroundColor3 = Color3.fromRGB(100, 0, 200)
 t1.TextColor3 = Color3.fromRGB(255, 255, 255)
 tabActiva = t1
-
--- GATITO ABRE/CIERRA MENÚ
-local menuVisible = true
-gatito.MouseButton1Click:Connect(function()
-    if not dragging then
-        menuVisible = not menuVisible
-        main.Visible = menuVisible
-    end
-end)
 
 player.CharacterAdded:Connect(function()
     volando = false
