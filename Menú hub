@@ -8,14 +8,54 @@ screenGui.Name = "MenuGUI"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = playerGui
 
--- FONDO PRINCIPAL
+-- GATITO FLOTANTE
+local gatito = Instance.new("TextButton")
+gatito.Size = UDim2.new(0, 45, 0, 45)
+gatito.Position = UDim2.new(0, 20, 0.5, 0)
+gatito.BackgroundColor3 = Color3.fromRGB(100, 0, 200)
+gatito.Text = "😸"
+gatito.TextSize = 26
+gatito.Font = Enum.Font.GothamBold
+gatito.BorderSizePixel = 0
+gatito.ZIndex = 10
+gatito.Parent = screenGui
+Instance.new("UICorner", gatito).CornerRadius = UDim.new(1, 0)
+local gatitoStroke = Instance.new("UIStroke")
+gatitoStroke.Color = Color3.fromRGB(180, 0, 255)
+gatitoStroke.Thickness = 2
+gatitoStroke.Parent = gatito
+
+-- Hacer gatito arrastrable
+local dragging = false
+local dragStart, startPos
+gatito.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = gatito.Position
+    end
+end)
+gatito.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMove) then
+        local delta = input.Position - dragStart
+        gatito.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+end)
+gatito.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+-- MENÚ PRINCIPAL
 local main = Instance.new("Frame")
-main.Size = UDim2.new(0, 380, 0, 420)
-main.Position = UDim2.new(0.5, -190, 0.5, -210)
+main.Size = UDim2.new(0, 300, 0, 340)
+main.Position = UDim2.new(0.5, -150, 0.5, -170)
 main.BackgroundColor3 = Color3.fromRGB(15, 0, 30)
 main.BorderSizePixel = 0
 main.Active = true
 main.Draggable = true
+main.Visible = true
 main.Parent = screenGui
 Instance.new("UICorner", main).CornerRadius = UDim.new(0, 8)
 local mainStroke = Instance.new("UIStroke")
@@ -25,50 +65,34 @@ mainStroke.Parent = main
 
 -- TÍTULO
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, 0, 0, 45)
-title.BackgroundColor3 = Color3.fromRGB(25, 0, 50)
+title.Size = UDim2.new(1, 0, 0, 38)
+title.BackgroundColor3 = Color3.fromRGB(80, 0, 160)
 title.BorderSizePixel = 0
 title.Text = "🐱 GATITO HUB"
-title.TextColor3 = Color3.fromRGB(200, 100, 255)
-title.TextSize = 18
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.TextSize = 15
 title.Font = Enum.Font.GothamBold
 title.Parent = main
 Instance.new("UICorner", title).CornerRadius = UDim.new(0, 8)
 
--- BOTÓN CERRAR
-local btnClose = Instance.new("TextButton")
-btnClose.Size = UDim2.new(0, 30, 0, 30)
-btnClose.Position = UDim2.new(1, -35, 0, 7)
-btnClose.BackgroundColor3 = Color3.fromRGB(150, 0, 255)
-btnClose.Text = "✕"
-btnClose.TextColor3 = Color3.fromRGB(255, 255, 255)
-btnClose.TextSize = 14
-btnClose.Font = Enum.Font.GothamBold
-btnClose.BorderSizePixel = 0
-btnClose.Parent = main
-Instance.new("UICorner", btnClose).CornerRadius = UDim.new(0, 6)
-btnClose.MouseButton1Click:Connect(function() screenGui:Destroy() end)
-
--- PANEL IZQUIERDO (pestañas)
+-- PANEL IZQUIERDO
 local leftPanel = Instance.new("Frame")
-leftPanel.Size = UDim2.new(0, 100, 1, -45)
-leftPanel.Position = UDim2.new(0, 0, 0, 45)
+leftPanel.Size = UDim2.new(0, 80, 1, -38)
+leftPanel.Position = UDim2.new(0, 0, 0, 38)
 leftPanel.BackgroundColor3 = Color3.fromRGB(20, 0, 40)
 leftPanel.BorderSizePixel = 0
 leftPanel.Parent = main
 Instance.new("UICorner", leftPanel).CornerRadius = UDim.new(0, 8)
 
--- PANEL DERECHO (contenido)
+-- PANEL DERECHO
 local rightPanel = Instance.new("Frame")
-rightPanel.Size = UDim2.new(1, -108, 1, -55)
-rightPanel.Position = UDim2.new(0, 105, 0, 50)
+rightPanel.Size = UDim2.new(1, -88, 1, -48)
+rightPanel.Position = UDim2.new(0, 84, 0, 43)
 rightPanel.BackgroundColor3 = Color3.fromRGB(15, 0, 30)
 rightPanel.BorderSizePixel = 0
 rightPanel.Parent = main
 
--- PÁGINAS
 local pages = {}
-
 local function crearPagina()
     local page = Instance.new("Frame")
     page.Size = UDim2.new(1, 0, 1, 0)
@@ -78,38 +102,37 @@ local function crearPagina()
     return page
 end
 
--- FUNCIÓN TOGGLE
 local function crearToggle(parent, texto, posY, callback)
     local row = Instance.new("Frame")
-    row.Size = UDim2.new(1, -10, 0, 40)
-    row.Position = UDim2.new(0, 5, 0, posY)
+    row.Size = UDim2.new(1, -8, 0, 36)
+    row.Position = UDim2.new(0, 4, 0, posY)
     row.BackgroundColor3 = Color3.fromRGB(30, 0, 55)
     row.BorderSizePixel = 0
     row.Parent = parent
     Instance.new("UICorner", row).CornerRadius = UDim.new(0, 6)
 
     local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1, -55, 1, 0)
-    label.Position = UDim2.new(0, 10, 0, 0)
+    label.Size = UDim2.new(1, -50, 1, 0)
+    label.Position = UDim2.new(0, 8, 0, 0)
     label.BackgroundTransparency = 1
     label.Text = texto
     label.TextColor3 = Color3.fromRGB(220, 220, 220)
-    label.TextSize = 13
+    label.TextSize = 12
     label.Font = Enum.Font.Gotham
     label.TextXAlignment = Enum.TextXAlignment.Left
     label.Parent = row
 
     local toggleBg = Instance.new("Frame")
-    toggleBg.Size = UDim2.new(0, 40, 0, 20)
-    toggleBg.Position = UDim2.new(1, -48, 0.5, -10)
+    toggleBg.Size = UDim2.new(0, 36, 0, 18)
+    toggleBg.Position = UDim2.new(1, -42, 0.5, -9)
     toggleBg.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
     toggleBg.BorderSizePixel = 0
     toggleBg.Parent = row
     Instance.new("UICorner", toggleBg).CornerRadius = UDim.new(1, 0)
 
     local toggleBtn = Instance.new("Frame")
-    toggleBtn.Size = UDim2.new(0, 16, 0, 16)
-    toggleBtn.Position = UDim2.new(0, 2, 0.5, -8)
+    toggleBtn.Size = UDim2.new(0, 14, 0, 14)
+    toggleBtn.Position = UDim2.new(0, 2, 0.5, -7)
     toggleBtn.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
     toggleBtn.BorderSizePixel = 0
     toggleBtn.Parent = toggleBg
@@ -126,25 +149,22 @@ local function crearToggle(parent, texto, posY, callback)
         active = not active
         if active then
             toggleBg.BackgroundColor3 = Color3.fromRGB(130, 0, 255)
-            toggleBtn.Position = UDim2.new(1, -18, 0.5, -8)
+            toggleBtn.Position = UDim2.new(1, -16, 0.5, -7)
             toggleBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
         else
             toggleBg.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-            toggleBtn.Position = UDim2.new(0, 2, 0.5, -8)
+            toggleBtn.Position = UDim2.new(0, 2, 0.5, -7)
             toggleBtn.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
         end
         callback(active)
     end)
-
-    return clickArea
 end
 
--- FUNCIÓN PESTAÑA
 local tabActiva = nil
 local function crearTab(nombre, icono, posY, page)
     local tab = Instance.new("TextButton")
-    tab.Size = UDim2.new(1, -10, 0, 50)
-    tab.Position = UDim2.new(0, 5, 0, posY)
+    tab.Size = UDim2.new(1, -8, 0, 48)
+    tab.Position = UDim2.new(0, 4, 0, posY)
     tab.BackgroundColor3 = Color3.fromRGB(30, 0, 55)
     tab.BorderSizePixel = 0
     tab.Text = icono .. "\n" .. nombre
@@ -175,7 +195,6 @@ local invisible = false
 local flyConnection = nil
 local function getChar() return player.Character end
 
--- FLY
 local function activarVuelo()
     local char = getChar()
     if not char then return end
@@ -229,7 +248,6 @@ local function desactivarVuelo()
     if hum then hum.PlatformStand = false end
 end
 
--- INVISIBLE
 local function setNetworkInvisible(state)
     local char = getChar()
     if not char then return end
@@ -249,41 +267,45 @@ local function setNetworkInvisible(state)
     end
 end
 
--- ===== PÁGINAS =====
-
--- MAIN
+-- PÁGINAS
 local pageMain = crearPagina()
 table.insert(pages, pageMain)
-crearToggle(pageMain, "Speed x2", 10, function(state)
+crearToggle(pageMain, "Speed x2", 8, function(state)
     local hum = getChar() and getChar():FindFirstChildOfClass("Humanoid")
     if hum then hum.WalkSpeed = state and 32 or 16 end
 end)
-crearToggle(pageMain, "Super Salto", 58, function(state)
+crearToggle(pageMain, "Super Salto", 52, function(state)
     local hum = getChar() and getChar():FindFirstChildOfClass("Humanoid")
     if hum then hum.JumpPower = state and 120 or 50 end
 end)
 
--- EXTRA
 local pageExtra = crearPagina()
 table.insert(pages, pageExtra)
-crearToggle(pageExtra, "Volar 🦅", 10, function(state)
+crearToggle(pageExtra, "Volar 🦅", 8, function(state)
     volando = state
     if state then activarVuelo() else desactivarVuelo() end
 end)
-crearToggle(pageExtra, "Invisible 👻", 58, function(state)
+crearToggle(pageExtra, "Invisible 👻", 52, function(state)
     invisible = state
     setNetworkInvisible(state)
 end)
 
--- TABS
-local t1 = crearTab("Main", "🏠", 10, pageMain)
-crearTab("Extra", "⭐", 68, pageExtra)
+local t1 = crearTab("Main", "🏠", 8, pageMain)
+crearTab("Extra", "⭐", 64, pageExtra)
 
--- Abrir Main por defecto
 pageMain.Visible = true
 t1.BackgroundColor3 = Color3.fromRGB(100, 0, 200)
 t1.TextColor3 = Color3.fromRGB(255, 255, 255)
 tabActiva = t1
+
+-- GATITO ABRE/CIERRA MENÚ
+local menuVisible = true
+gatito.MouseButton1Click:Connect(function()
+    if not dragging then
+        menuVisible = not menuVisible
+        main.Visible = menuVisible
+    end
+end)
 
 player.CharacterAdded:Connect(function()
     volando = false
