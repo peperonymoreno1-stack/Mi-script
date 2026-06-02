@@ -239,6 +239,10 @@ local function activarVuelo()
     if not root or not hum then return end
 
     hum.PlatformStand = true
+
+    repeat task.wait() until hum.FloorMaterial ~= Enum.Material.Air
+
+    if not volando then return end
     root.Anchored = true
 
     flyConnection = RunService.Heartbeat:Connect(function()
