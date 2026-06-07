@@ -2,587 +2,251 @@ local player = game.Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Camera = workspace.CurrentCamera
+local Players = game.Players
 
--- PANTALLA DE CARGA
-local loadGui = Instance.new("ScreenGui")
-loadGui.Name = "LoadGui"
-loadGui.ResetOnSpawn = false
-loadGui.Parent = playerGui
+-- ==================== MENÚ BASE (OPTIMIZADO) ====================
+local sg = Instance.new("ScreenGui"); sg.ResetOnSpawn = false; sg.Parent = playerGui
 
-local loadFrame = Instance.new("Frame")
-loadFrame.Size = UDim2.new(1, 0, 1, 0)
-loadFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 15)
-loadFrame.BorderSizePixel = 0
-loadFrame.Parent = loadGui
+-- Carga
+local lGui = Instance.new("ScreenGui"); lGui.ResetOnSpawn = false; lGui.Parent = playerGui
+local lf = Instance.new("Frame", lGui); lf.Size = UDim2.new(1,0,1,0); lf.BackgroundColor3 = Color3.fromRGB(5,5,15)
+local lt = Instance.new("TextLabel", lf); lt.Size = UDim2.new(0,300,0,35); lt.Position = UDim2.new(0.5,-150,0.38,0); lt.BackgroundTransparency = 1; lt.Text = "GATITO HUB"; lt.TextColor3 = Color3.fromRGB(255,255,255); lt.TextSize = 22; lt.Font = Enum.Font.GothamBold
+local ls = Instance.new("TextLabel", lf); ls.Size = UDim2.new(0,300,0,18); ls.Position = UDim2.new(0.5,-150,0.47,0); ls.BackgroundTransparency = 1; ls.Text = "by gatito sabroson"; ls.TextColor3 = Color3.fromRGB(150,180,255); ls.TextSize = 12; ls.Font = Enum.Font.Gotham
+local bCont = Instance.new("Frame", lf); bCont.Size = UDim2.new(0,320,0,26); bCont.Position = UDim2.new(0.5,-160,0.57,0); bCont.BackgroundTransparency = 1
+Instance.new("UICorner",bCont).CornerRadius = UDim.new(1,0)
+local bStroke = Instance.new("UIStroke",bCont); bStroke.Thickness = 2
+local bBg = Instance.new("Frame", bCont); bBg.Size = UDim2.new(1,-4,1,-4); bBg.Position = UDim2.new(0,2,0,2); bBg.BackgroundColor3 = Color3.fromRGB(20,20,40)
+Instance.new("UICorner",bBg).CornerRadius = UDim.new(1,0)
+local bFill = Instance.new("Frame", bBg); bFill.Size = UDim2.new(0,0,1,0); bFill.BorderSizePixel = 0
+Instance.new("UICorner",bFill).CornerRadius = UDim.new(1,0)
+local bPct = Instance.new("TextLabel", bBg); bPct.Size = UDim2.new(1,0,1,0); bPct.BackgroundTransparency = 1; bPct.Text = "0%"; bPct.TextColor3 = Color3.fromRGB(255,255,255); bPct.TextSize = 11; bPct.Font = Enum.Font.GothamBold
 
-local gatoCarga = Instance.new("TextLabel")
-gatoCarga.Size = UDim2.new(0, 200, 0, 60)
-gatoCarga.Position = UDim2.new(0.5, -100, 0.35, 0)
-gatoCarga.BackgroundTransparency = 1
-gatoCarga.Text = "😸"
-gatoCarga.TextSize = 50
-gatoCarga.Font = Enum.Font.GothamBold
-gatoCarga.Parent = loadFrame
-
-local loadTitle = Instance.new("TextLabel")
-loadTitle.Size = UDim2.new(0, 300, 0, 30)
-loadTitle.Position = UDim2.new(0.5, -150, 0.48, 0)
-loadTitle.BackgroundTransparency = 1
-loadTitle.Text = "😸 GATITO HUB"
-loadTitle.TextColor3 = Color3.fromRGB(0, 150, 255)
-loadTitle.TextSize = 18
-loadTitle.Font = Enum.Font.GothamBold
-loadTitle.Parent = loadFrame
-
-local loadSub = Instance.new("TextLabel")
-loadSub.Size = UDim2.new(0, 300, 0, 20)
-loadSub.Position = UDim2.new(0.5, -150, 0.54, 0)
-loadSub.BackgroundTransparency = 1
-loadSub.Text = "by gatito sabroson"
-loadSub.TextColor3 = Color3.fromRGB(100, 180, 255)
-loadSub.TextSize = 12
-loadSub.Font = Enum.Font.Gotham
-loadSub.Parent = loadFrame
-
-local barBg = Instance.new("Frame")
-barBg.Size = UDim2.new(0, 300, 0, 22)
-barBg.Position = UDim2.new(0.5, -150, 0.62, 0)
-barBg.BackgroundColor3 = Color3.fromRGB(0, 0, 40)
-barBg.BorderSizePixel = 0
-barBg.Parent = loadFrame
-Instance.new("UICorner", barBg).CornerRadius = UDim.new(1, 0)
-
-local barFill = Instance.new("Frame")
-barFill.Size = UDim2.new(0, 0, 1, 0)
-barFill.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
-barFill.BorderSizePixel = 0
-barFill.Parent = barBg
-Instance.new("UICorner", barFill).CornerRadius = UDim.new(1, 0)
-
-local pctLabel = Instance.new("TextLabel")
-pctLabel.Size = UDim2.new(1, 0, 1, 0)
-pctLabel.BackgroundTransparency = 1
-pctLabel.Text = "0%"
-pctLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-pctLabel.TextSize = 12
-pctLabel.Font = Enum.Font.GothamBold
-pctLabel.Parent = barBg
-
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "MenuGUI"
-screenGui.ResetOnSpawn = false
-screenGui.Parent = playerGui
-screenGui.Enabled = false
+sg.Enabled = false
+local hue = 0
+RunService.RenderStepped:Connect(function()
+    hue = (hue+0.004)%1
+    local c = Color3.fromHSV(hue,1,1)
+    bStroke.Color = c
+    bFill.BackgroundColor3 = c
+end)
 
 task.spawn(function()
-    for i = 1, 100 do
-        task.wait(0.05)
-        barFill.Size = UDim2.new(i / 100, 0, 1, 0)
-        pctLabel.Text = i .. "%"
-    end
-    task.wait(0.3)
-    loadGui:Destroy()
-    screenGui.Enabled = true
+    for i=1,100 do task.wait(0.05); bFill.Size = UDim2.new(i/100,0,1,0); bPct.Text = i.."%"; end
+    task.wait(0.3); lGui:Destroy(); sg.Enabled = true
 end)
 
--- MENÚ PRINCIPAL
-local main = Instance.new("Frame")
-main.Size = UDim2.new(0, 320, 0, 420)
-main.Position = UDim2.new(0.5, -160, 0.5, -210)
-main.BackgroundColor3 = Color3.fromRGB(5, 5, 20)
-main.BorderSizePixel = 0
-main.Active = true
-main.Draggable = true
-main.Visible = true
-main.Parent = screenGui
-Instance.new("UICorner", main).CornerRadius = UDim.new(0, 8)
-local mainStroke = Instance.new("UIStroke")
-mainStroke.Color = Color3.fromRGB(0, 120, 255)
-mainStroke.Thickness = 2
-mainStroke.Parent = main
+-- Flotante y Menú principal (mismo diseño)
+local flotante = Instance.new("TextButton", sg); flotante.Size = UDim2.new(0,45,0,45); flotante.Position = UDim2.new(0,20,0.5,0); flotante.BackgroundColor3 = Color3.fromRGB(0,60,150); flotante.Text = "😸"; flotante.TextSize = 24; flotante.Font = Enum.Font.GothamBold; flotante.BorderSizePixel = 0; flotante.Visible = false
+Instance.new("UICorner",flotante).CornerRadius = UDim.new(1,0)
+local fStroke = Instance.new("UIStroke",flotante); fStroke.Thickness = 2
 
-local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, 0, 0, 38)
-title.BackgroundColor3 = Color3.fromRGB(0, 50, 150)
-title.BorderSizePixel = 0
-title.Text = "😸 GATITO HUB - Ninja Legends"
-title.TextColor3 = Color3.fromRGB(255, 255, 255)
-title.TextSize = 13
-title.Font = Enum.Font.GothamBold
-title.Parent = main
-Instance.new("UICorner", title).CornerRadius = UDim.new(0, 8)
+local main = Instance.new("Frame", sg); main.Size = UDim2.new(0.88,0,0.78,0); main.Position = UDim2.new(0.06,0,0.11,0); main.BackgroundColor3 = Color3.fromRGB(10,10,20); main.Active = true
+Instance.new("UICorner",main).CornerRadius = UDim.new(0,12)
+local mStroke = Instance.new("UIStroke",main); mStroke.Thickness = 2
 
-local btnX = Instance.new("TextButton")
-btnX.Size = UDim2.new(0, 26, 0, 26)
-btnX.Position = UDim2.new(1, -30, 0, 6)
-btnX.BackgroundColor3 = Color3.fromRGB(0, 100, 220)
-btnX.Text = "✕"
-btnX.TextColor3 = Color3.fromRGB(255, 255, 255)
-btnX.TextSize = 13
-btnX.Font = Enum.Font.GothamBold
-btnX.BorderSizePixel = 0
-btnX.ZIndex = 5
-btnX.Parent = main
-Instance.new("UICorner", btnX).CornerRadius = UDim.new(1, 0)
-
-local flotante = Instance.new("TextButton")
-flotante.Size = UDim2.new(0, 45, 0, 45)
-flotante.Position = UDim2.new(0, 20, 0.5, 0)
-flotante.BackgroundColor3 = Color3.fromRGB(0, 80, 200)
-flotante.Text = "😸"
-flotante.TextSize = 24
-flotante.Font = Enum.Font.GothamBold
-flotante.BorderSizePixel = 0
-flotante.ZIndex = 10
-flotante.Visible = false
-flotante.Parent = screenGui
-Instance.new("UICorner", flotante).CornerRadius = UDim.new(1, 0)
-local flotanteStroke = Instance.new("UIStroke")
-flotanteStroke.Color = Color3.fromRGB(0, 120, 255)
-flotanteStroke.Thickness = 2
-flotanteStroke.Parent = flotante
-
-btnX.MouseButton1Click:Connect(function()
-    main.Visible = false
-    flotante.Visible = true
+RunService.RenderStepped:Connect(function()
+    hue = (hue+0.004)%1; local c = Color3.fromHSV(hue,1,1); mStroke.Color = c; fStroke.Color = c
 end)
 
-local dragging = false
-local dragStart, startPos
-local moved = false
-
-flotante.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        moved = false
-        dragStart = input.Position
-        startPos = flotante.Position
+-- Drag (simplificado)
+local dragging, dragInput, dragStart, startPos
+main.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true; dragStart = input.Position; startPos = main.Position
     end
 end)
-
 UserInputService.InputChanged:Connect(function(input)
-    if dragging and (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMove) then
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
         local delta = input.Position - dragStart
-        if delta.Magnitude > 8 then moved = true end
-        flotante.Position = UDim2.new(
-            startPos.X.Scale, startPos.X.Offset + delta.X,
-            startPos.Y.Scale, startPos.Y.Offset + delta.Y
-        )
+        main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
     end
 end)
-
 UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
-        if dragging and not moved then
-            flotante.Visible = false
-            main.Visible = true
-        end
-        dragging = false
-        moved = false
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = false end
+end)
+
+-- Drag flotante + toggle
+flotante.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        local wasDragging = false
+        local conn = UserInputService.InputChanged:Connect(function(i)
+            if i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch then wasDragging = true end
+        end)
+        UserInputService.InputEnded:Connect(function() conn:Disconnect(); if not wasDragging then flotante.Visible=false; main.Visible=true end end)
     end
 end)
 
--- PANEL IZQUIERDO
-local leftPanel = Instance.new("Frame")
-leftPanel.Size = UDim2.new(0, 80, 1, -38)
-leftPanel.Position = UDim2.new(0, 0, 0, 38)
-leftPanel.BackgroundColor3 = Color3.fromRGB(0, 10, 35)
-leftPanel.BorderSizePixel = 0
-leftPanel.Parent = main
-Instance.new("UICorner", leftPanel).CornerRadius = UDim.new(0, 8)
+-- Top Bar
+local topBar = Instance.new("Frame", main); topBar.Size = UDim2.new(1,0,0,55); topBar.BackgroundColor3 = Color3.fromRGB(12,12,25)
+Instance.new("UICorner",topBar).CornerRadius = UDim.new(0,12)
+local logo = Instance.new("TextLabel", topBar); logo.Size = UDim2.new(0,220,0,28); logo.Position = UDim2.new(0,15,0,6); logo.BackgroundTransparency = 1; logo.Text = "GATITO HUB"; logo.TextColor3 = Color3.fromRGB(255,255,255); logo.TextSize = 17; logo.Font = Enum.Font.GothamBold; logo.TextXAlignment = Enum.TextXAlignment.Left
+local subT = Instance.new("TextLabel", topBar); subT.Size = UDim2.new(0,220,0,16); subT.Position = UDim2.new(0,15,0,34); subT.BackgroundTransparency = 1; subT.Text = "by gatito sabroson"; subT.TextColor3 = Color3.fromRGB(100,150,255); subT.TextSize = 10; subT.Font = Enum.Font.Gotham
+local close = Instance.new("TextButton", topBar); close.Size = UDim2.new(0,28,0,28); close.Position = UDim2.new(1,-38,0.5,-14); close.BackgroundColor3 = Color3.fromRGB(0,60,160); close.Text = "✕"; close.TextColor3 = Color3.fromRGB(255,255,255); close.TextSize = 13; close.Font = Enum.Font.GothamBold
+Instance.new("UICorner",close).CornerRadius = UDim.new(1,0)
+close.MouseButton1Click:Connect(function() main.Visible=false; flotante.Visible=true end)
 
-local rightPanel = Instance.new("Frame")
-rightPanel.Size = UDim2.new(1, -88, 1, -48)
-rightPanel.Position = UDim2.new(0, 84, 0, 43)
-rightPanel.BackgroundColor3 = Color3.fromRGB(5, 5, 20)
-rightPanel.BorderSizePixel = 0
-rightPanel.Parent = main
+-- Panels
+local lp = Instance.new("Frame", main); lp.Size = UDim2.new(0,108,1,-56); lp.Position = UDim2.new(0,0,0,56); lp.BackgroundColor3 = Color3.fromRGB(12,12,25)
+local rp = Instance.new("ScrollingFrame", main); rp.Size = UDim2.new(1,-109,1,-56); rp.Position = UDim2.new(0,109,0,56); rp.BackgroundTransparency = 1; rp.ScrollBarThickness = 3; rp.ScrollBarImageColor3 = Color3.fromRGB(0,100,255)
 
 local pages = {}
-local function crearPagina()
-    local page = Instance.new("Frame")
-    page.Size = UDim2.new(1, 0, 1, 0)
-    page.BackgroundTransparency = 1
-    page.Visible = false
-    page.Parent = rightPanel
-    return page
-end
-
-local function crearToggle(parent, texto, posY, callback)
-    local row = Instance.new("Frame")
-    row.Size = UDim2.new(1, -8, 0, 36)
-    row.Position = UDim2.new(0, 4, 0, posY)
-    row.BackgroundColor3 = Color3.fromRGB(0, 20, 60)
-    row.BorderSizePixel = 0
-    row.Parent = parent
-    Instance.new("UICorner", row).CornerRadius = UDim.new(0, 6)
-
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1, -50, 1, 0)
-    label.Position = UDim2.new(0, 8, 0, 0)
-    label.BackgroundTransparency = 1
-    label.Text = texto
-    label.TextColor3 = Color3.fromRGB(200, 220, 255)
-    label.TextSize = 12
-    label.Font = Enum.Font.Gotham
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.Parent = row
-
-    local toggleBg = Instance.new("Frame")
-    toggleBg.Size = UDim2.new(0, 36, 0, 18)
-    toggleBg.Position = UDim2.new(1, -42, 0.5, -9)
-    toggleBg.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-    toggleBg.BorderSizePixel = 0
-    toggleBg.Parent = row
-    Instance.new("UICorner", toggleBg).CornerRadius = UDim.new(1, 0)
-
-    local toggleBtn = Instance.new("Frame")
-    toggleBtn.Size = UDim2.new(0, 14, 0, 14)
-    toggleBtn.Position = UDim2.new(0, 2, 0.5, -7)
-    toggleBtn.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
-    toggleBtn.BorderSizePixel = 0
-    toggleBtn.Parent = toggleBg
-    Instance.new("UICorner", toggleBtn).CornerRadius = UDim.new(1, 0)
-
+local function crearPagina() local p = Instance.new("Frame", rp); p.Size = UDim2.new(1,0,1,0); p.BackgroundTransparency = 1; p.Visible = false; return p end
+local function crearToggle(p, txt, y, cb)
+    local row = Instance.new("Frame", p); row.Size = UDim2.new(1,-18,0,44); row.Position = UDim2.new(0,9,0,y); row.BackgroundColor3 = Color3.fromRGB(18,18,35)
+    Instance.new("UICorner",row).CornerRadius = UDim.new(0,8)
+    local lbl = Instance.new("TextLabel", row); lbl.Size = UDim2.new(1,-55,1,0); lbl.Position = UDim2.new(0,12,0,0); lbl.BackgroundTransparency = 1; lbl.Text = txt; lbl.TextColor3 = Color3.fromRGB(220,230,255); lbl.TextSize = 12; lbl.Font = Enum.Font.Gotham; lbl.TextXAlignment = Enum.TextXAlignment.Left
+    local tog = Instance.new("TextButton", row); tog.Size = UDim2.new(0,40,0,20); tog.Position = UDim2.new(1,-48,0.5,-10); tog.BackgroundColor3 = Color3.fromRGB(40,40,60); Instance.new("UICorner",tog).CornerRadius = UDim.new(1,0)
+    local knob = Instance.new("Frame", tog); knob.Size = UDim2.new(0,16,0,16); knob.Position = UDim2.new(0,2,0.5,-8); knob.BackgroundColor3 = Color3.fromRGB(150,150,170); Instance.new("UICorner",knob).CornerRadius = UDim.new(1,0)
     local active = false
-    local clickArea = Instance.new("TextButton")
-    clickArea.Size = UDim2.new(1, 0, 1, 0)
-    clickArea.BackgroundTransparency = 1
-    clickArea.Text = ""
-    clickArea.Parent = row
-
-    clickArea.MouseButton1Click:Connect(function()
+    tog.MouseButton1Click:Connect(function()
         active = not active
-        if active then
-            toggleBg.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
-            toggleBtn.Position = UDim2.new(1, -16, 0.5, -7)
-            toggleBtn.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        else
-            toggleBg.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-            toggleBtn.Position = UDim2.new(0, 2, 0.5, -7)
-            toggleBtn.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
-        end
-        callback(active)
+        if active then tog.BackgroundColor3 = Color3.fromRGB(0,100,255); knob.Position = UDim2.new(1,-18,0.5,-8); knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
+        else tog.BackgroundColor3 = Color3.fromRGB(40,40,60); knob.Position = UDim2.new(0,2,0.5,-8); knob.BackgroundColor3 = Color3.fromRGB(150,150,170) end
+        cb(active)
     end)
 end
-
-local function crearSlider(parent, texto, posY, min, max, default, callback)
-    local row = Instance.new("Frame")
-    row.Size = UDim2.new(1, -8, 0, 50)
-    row.Position = UDim2.new(0, 4, 0, posY)
-    row.BackgroundColor3 = Color3.fromRGB(0, 20, 60)
-    row.BorderSizePixel = 0
-    row.Parent = parent
-    Instance.new("UICorner", row).CornerRadius = UDim.new(0, 6)
-
-    local label = Instance.new("TextLabel")
-    label.Size = UDim2.new(1, -10, 0, 20)
-    label.Position = UDim2.new(0, 8, 0, 4)
-    label.BackgroundTransparency = 1
-    label.Text = texto .. ": " .. default
-    label.TextColor3 = Color3.fromRGB(200, 220, 255)
-    label.TextSize = 12
-    label.Font = Enum.Font.Gotham
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.Parent = row
-
-    local sliderBg = Instance.new("Frame")
-    sliderBg.Size = UDim2.new(1, -16, 0, 8)
-    sliderBg.Position = UDim2.new(0, 8, 0, 32)
-    sliderBg.BackgroundColor3 = Color3.fromRGB(30, 30, 60)
-    sliderBg.BorderSizePixel = 0
-    sliderBg.Parent = row
-    Instance.new("UICorner", sliderBg).CornerRadius = UDim.new(1, 0)
-
-    local sliderFill = Instance.new("Frame")
-    sliderFill.Size = UDim2.new((default - min) / (max - min), 0, 1, 0)
-    sliderFill.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
-    sliderFill.BorderSizePixel = 0
-    sliderFill.Parent = sliderBg
-    Instance.new("UICorner", sliderFill).CornerRadius = UDim.new(1, 0)
-
-    local draggingSlider = false
-    sliderBg.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
-            draggingSlider = true
-        end
-    end)
-    UserInputService.InputChanged:Connect(function(input)
-        if draggingSlider and (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMove) then
-            local relX = math.clamp((input.Position.X - sliderBg.AbsolutePosition.X) / sliderBg.AbsoluteSize.X, 0, 1)
-            sliderFill.Size = UDim2.new(relX, 0, 1, 0)
-            local value = math.floor(min + (max - min) * relX)
-            label.Text = texto .. ": " .. value
-            callback(value)
-        end
-    end)
-    UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
-            draggingSlider = false
-        end
-    end)
+local function crearSlider(p, txt, y, min, max, def, cb)
+    local row = Instance.new("Frame", p); row.Size = UDim2.new(1,-18,0,55); row.Position = UDim2.new(0,9,0,y); row.BackgroundColor3 = Color3.fromRGB(18,18,35)
+    Instance.new("UICorner",row).CornerRadius = UDim.new(0,8)
+    local lbl = Instance.new("TextLabel", row); lbl.Size = UDim2.new(1,-10,0,22); lbl.Position = UDim2.new(0,12,0,6); lbl.BackgroundTransparency = 1; lbl.Text = txt..": "..def; lbl.TextColor3 = Color3.fromRGB(220,230,255); lbl.TextSize = 12; lbl.Font = Enum.Font.Gotham
+    local bar = Instance.new("Frame", row); bar.Size = UDim2.new(1,-24,0,6); bar.Position = UDim2.new(0,12,0,38); bar.BackgroundColor3 = Color3.fromRGB(40,40,60)
+    Instance.new("UICorner",bar).CornerRadius = UDim.new(1,0)
+    local fill = Instance.new("Frame", bar); fill.Size = UDim2.new((def-min)/(max-min),0,1,0); fill.BackgroundColor3 = Color3.fromRGB(0,100,255); Instance.new("UICorner",fill).CornerRadius = UDim.new(1,0)
+    local dragging = false
+    bar.InputBegan:Connect(function(i) if i.UserInputType==Enum.UserInputType.MouseButton1 then dragging=true end end)
+    UserInputService.InputChanged:Connect(function(i) if dragging then local x = math.clamp((i.Position.X-bar.AbsolutePosition.X)/bar.AbsoluteSize.X,0,1); fill.Size=UDim2.new(x,0,1,0); local v=math.floor(min+(max-min)*x); lbl.Text=txt..": "..v; cb(v) end end)
+    UserInputService.InputEnded:Connect(function() dragging=false end)
 end
-
-local tabActiva = nil
-local function crearTab(nombre, icono, posY, page)
-    local tab = Instance.new("TextButton")
-    tab.Size = UDim2.new(1, -8, 0, 48)
-    tab.Position = UDim2.new(0, 4, 0, posY)
-    tab.BackgroundColor3 = Color3.fromRGB(0, 20, 60)
-    tab.BorderSizePixel = 0
-    tab.Text = icono .. "\n" .. nombre
-    tab.TextColor3 = Color3.fromRGB(150, 200, 255)
-    tab.TextSize = 11
-    tab.Font = Enum.Font.Gotham
-    tab.Parent = leftPanel
-    Instance.new("UICorner", tab).CornerRadius = UDim.new(0, 6)
-
+local function crearTab(name, icon, y, page)
+    local tab = Instance.new("TextButton", lp); tab.Size = UDim2.new(1,-10,0,52); tab.Position = UDim2.new(0,5,0,y); tab.BackgroundColor3 = Color3.fromRGB(15,15,30); tab.Text = icon.."\n"..name; tab.TextColor3 = Color3.fromRGB(120,150,200); tab.TextSize = 11; tab.Font = Enum.Font.Gotham
+    Instance.new("UICorner",tab).CornerRadius = UDim.new(0,8)
     tab.MouseButton1Click:Connect(function()
-        for _, p in pairs(pages) do p.Visible = false end
+        for _,p in pairs(pages) do p.Visible=false end
         page.Visible = true
-        if tabActiva then
-            tabActiva.BackgroundColor3 = Color3.fromRGB(0, 20, 60)
-            tabActiva.TextColor3 = Color3.fromRGB(150, 200, 255)
-        end
-        tab.BackgroundColor3 = Color3.fromRGB(0, 80, 200)
-        tab.TextColor3 = Color3.fromRGB(255, 255, 255)
-        tabActiva = tab
-    end)
-
-    return tab
-end
-
-local function getChar() return player.Character end
-local function getHum() return getChar() and getChar():FindFirstChildOfClass("Humanoid") end
-local jumpConn = nil
-
--- PÁGINA COINS
-local pageCoins = crearPagina()
-table.insert(pages, pageCoins)
-
-local instrLabel = Instance.new("TextLabel")
-instrLabel.Size = UDim2.new(1, -8, 0, 35)
-instrLabel.Position = UDim2.new(0, 4, 0, 0)
-instrLabel.BackgroundTransparency = 1
-instrLabel.Text = "⚠️ Paso 1: INF Gems → Paso 2: Elemento → Paso 3: Cantidad"
-instrLabel.TextColor3 = Color3.fromRGB(255, 220, 0)
-instrLabel.TextSize = 10
-instrLabel.Font = Enum.Font.Gotham
-instrLabel.TextWrapped = true
-instrLabel.Parent = pageCoins
-
-local btnInfGems = Instance.new("TextButton")
-btnInfGems.Size = UDim2.new(1, -8, 0, 34)
-btnInfGems.Position = UDim2.new(0, 4, 0, 38)
-btnInfGems.BackgroundColor3 = Color3.fromRGB(0, 80, 200)
-btnInfGems.Text = "💎 Paso 1: Activar INF Gems"
-btnInfGems.TextColor3 = Color3.fromRGB(255, 255, 255)
-btnInfGems.TextSize = 11
-btnInfGems.Font = Enum.Font.GothamBold
-btnInfGems.BorderSizePixel = 0
-btnInfGems.Parent = pageCoins
-Instance.new("UICorner", btnInfGems).CornerRadius = UDim.new(0, 6)
-
-btnInfGems.MouseButton1Click:Connect(function()
-    local ok = pcall(function()
-        ReplicatedStorage:WaitForChild("rEvents"):WaitForChild("zenMasterEvent"):FireServer(
-            "convertGems",
-            -9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999
-        )
-    end)
-    btnInfGems.Text = ok and "✅ INF Gems activado" or "❌ Error"
-    btnInfGems.BackgroundColor3 = ok and Color3.fromRGB(0, 150, 50) or Color3.fromRGB(150, 0, 0)
-end)
-
-local elemLabel = Instance.new("TextLabel")
-elemLabel.Size = UDim2.new(1, -8, 0, 16)
-elemLabel.Position = UDim2.new(0, 4, 0, 78)
-elemLabel.BackgroundTransparency = 1
-elemLabel.Text = "— Paso 2: Elige elemento —"
-elemLabel.TextColor3 = Color3.fromRGB(0, 150, 255)
-elemLabel.TextSize = 10
-elemLabel.Font = Enum.Font.GothamBold
-elemLabel.Parent = pageCoins
-
-local elementos = {"Shadow Charge", "Lightning", "Inferno", "Frost"}
-for i, elem in ipairs(elementos) do
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(0.48, 0, 0, 28)
-    btn.Position = UDim2.new(i % 2 == 1 and 0.02 or 0.51, 0, 0, 96 + math.floor((i-1)/2) * 34)
-    btn.BackgroundColor3 = Color3.fromRGB(0, 40, 120)
-    btn.Text = elem
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.TextSize = 9
-    btn.Font = Enum.Font.Gotham
-    btn.BorderSizePixel = 0
-    btn.Parent = pageCoins
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
-    btn.MouseButton1Click:Connect(function()
-        pcall(function()
-            ReplicatedStorage:WaitForChild("rEvents"):WaitForChild("elementMasteryEvent"):FireServer(elem)
-        end)
-        btn.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
-        task.delay(1, function() btn.BackgroundColor3 = Color3.fromRGB(0, 40, 120) end)
+        tab.BackgroundColor3 = Color3.fromRGB(0,60,160); tab.TextColor3 = Color3.fromRGB(255,255,255)
     end)
 end
 
-local cantLabel = Instance.new("TextLabel")
-cantLabel.Size = UDim2.new(1, -8, 0, 16)
-cantLabel.Position = UDim2.new(0, 4, 0, 168)
-cantLabel.BackgroundTransparency = 1
-cantLabel.Text = "— Paso 3: Cantidad —"
-cantLabel.TextColor3 = Color3.fromRGB(0, 150, 255)
-cantLabel.TextSize = 10
-cantLabel.Font = Enum.Font.GothamBold
-cantLabel.Parent = pageCoins
+-- ==================== CHEATS ====================
+local Aimbot, Silent, FOVVis, FOV = false, false, false, 120
+local ESP, Name, Health, Box, Dist, Line = false, false, false, false, false, false
+local SpeedE, SpeedV, Noclip, JumpE, JumpP = false, 50, false, false, 100
 
-local inputBox = Instance.new("TextBox")
-inputBox.Size = UDim2.new(1, -8, 0, 32)
-inputBox.Position = UDim2.new(0, 4, 0, 188)
-inputBox.BackgroundColor3 = Color3.fromRGB(0, 20, 60)
-inputBox.Text = ""
-inputBox.PlaceholderText = "Escribe la cantidad..."
-inputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-inputBox.PlaceholderColor3 = Color3.fromRGB(100, 150, 200)
-inputBox.TextSize = 12
-inputBox.Font = Enum.Font.Gotham
-inputBox.BorderSizePixel = 0
-inputBox.ClearTextOnFocus = true
-inputBox.Parent = pageCoins
-Instance.new("UICorner", inputBox).CornerRadius = UDim.new(0, 6)
+local FOVCircle = Drawing.new("Circle"); FOVCircle.Thickness=2; FOVCircle.Color=Color3.fromRGB(0,100,255); FOVCircle.Filled=false; FOVCircle.Visible=false
 
-local btnObtener = Instance.new("TextButton")
-btnObtener.Size = UDim2.new(1, -8, 0, 34)
-btnObtener.Position = UDim2.new(0, 4, 0, 226)
-btnObtener.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
-btnObtener.Text = "💰 Obtener Monedas"
-btnObtener.TextColor3 = Color3.fromRGB(255, 255, 255)
-btnObtener.TextSize = 13
-btnObtener.Font = Enum.Font.GothamBold
-btnObtener.BorderSizePixel = 0
-btnObtener.Parent = pageCoins
-Instance.new("UICorner", btnObtener).CornerRadius = UDim.new(0, 6)
-
-btnObtener.MouseButton1Click:Connect(function()
-    local num = tonumber(inputBox.Text)
-    if num and num > 0 then
-        local ok = pcall(function()
-            ReplicatedStorage:WaitForChild("rEvents"):WaitForChild("zenMasterEvent"):FireServer("convertGems", num)
-        end)
-        btnObtener.Text = ok and "✅ Listo: " .. num or "❌ Error"
-        btnObtener.BackgroundColor3 = ok and Color3.fromRGB(0, 150, 50) or Color3.fromRGB(150, 0, 0)
-        task.delay(2, function()
-            btnObtener.Text = "💰 Obtener Monedas"
-            btnObtener.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
-        end)
-    else
-        btnObtener.Text = "⚠️ Número inválido"
-        task.delay(2, function() btnObtener.Text = "💰 Obtener Monedas" end)
-    end
-end)
-
--- PÁGINA MOVE
-local pageMove = crearPagina()
-table.insert(pages, pageMove)
-
-crearSlider(pageMove, "Speed", 8, 16, 150, 16, function(value)
-    local hum = getHum()
-    if hum then hum.WalkSpeed = value end
-end)
-
-crearSlider(pageMove, "Jump Power", 66, 50, 300, 50, function(value)
-    local hum = getHum()
-    if hum then hum.JumpPower = value end
-end)
-
-crearToggle(pageMove, "Infinite Jump ♾️", 124, function(state)
-    if state then
-        jumpConn = UserInputService.JumpRequest:Connect(function()
-            local hum = getHum()
-            if hum then hum:ChangeState(Enum.HumanoidStateType.Jumping) end
-        end)
-    else
-        if jumpConn then jumpConn:Disconnect(); jumpConn = nil end
-    end
-end)
-
-crearToggle(pageMove, "God Mode ❤️", 168, function(state)
-    local hum = getHum()
-    if hum then
-        hum.MaxHealth = state and math.huge or 100
-        hum.Health = state and math.huge or 100
-    end
-end)
-
--- PÁGINA TP ISLAS
-local pageTp = crearPagina()
-table.insert(pages, pageTp)
-
-local islas = {
-    {nombre = "🏝️ Spawn",              pos = Vector3.new(0, 50, 0)},
-    {nombre = "⚔️ Ninja Island",        pos = Vector3.new(200, 50, 0)},
-    {nombre = "🌊 Ocean Island",        pos = Vector3.new(400, 50, 0)},
-    {nombre = "🔥 Flame Island",        pos = Vector3.new(600, 50, 0)},
-    {nombre = "⚡ Lightning Island",    pos = Vector3.new(800, 50, 0)},
-    {nombre = "🌑 Shadow Island",       pos = Vector3.new(1000, 50, 0)},
-    {nombre = "❄️ Frost Island",        pos = Vector3.new(1200, 50, 0)},
-    {nombre = "🌟 Master Island",       pos = Vector3.new(1800, 50, 0)},
-    {nombre = "👑 Zen Island",          pos = Vector3.new(2000, 50, 0)},
-}
-
-local islaScroll = Instance.new("ScrollingFrame")
-islaScroll.Size = UDim2.new(1, -8, 1, 0)
-islaScroll.Position = UDim2.new(0, 4, 0, 0)
-islaScroll.BackgroundTransparency = 1
-islaScroll.ScrollBarThickness = 4
-islaScroll.ScrollBarImageColor3 = Color3.fromRGB(0, 120, 255)
-islaScroll.CanvasSize = UDim2.new(0, 0, 0, #islas * 42)
-islaScroll.Parent = pageTp
-
-for i, isla in ipairs(islas) do
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, -4, 0, 36)
-    btn.Position = UDim2.new(0, 2, 0, (i-1) * 42)
-    btn.BackgroundColor3 = Color3.fromRGB(0, 20, 60)
-    btn.Text = isla.nombre
-btn.TextColor3 = Color3.fromRGB(200, 220, 255)
-    btn.TextSize = 12
-    btn.Font = Enum.Font.Gotham
-    btn.BorderSizePixel = 0
-    btn.Parent = islaScroll
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
-
-    btn.MouseButton1Click:Connect(function()
-        local char = getChar()
-        if not char then return end
-        local root = char:FindFirstChild("HumanoidRootPart")
-        if not root then return end
-        local encontrado = false
-        for _, obj in pairs(workspace:GetDescendants()) do
-            if obj:IsA("BasePart") and obj.Name:lower():find(isla.nombre:lower():gsub("[^%a]", ""):sub(1,5):lower()) then
-                root.CFrame = CFrame.new(obj.Position + Vector3.new(0, 10, 0))
-                encontrado = true
-                break
+local function GetClosest()
+    local closest, dist = nil, FOV
+    for _,p in Players:GetPlayers() do
+        if p\~=player and p.Character and p.Character:FindFirstChild("Head") and p.Character.Humanoid.Health>0 then
+            local pos, on = Camera:WorldToViewportPoint(p.Character.Head.Position)
+            if on then
+                local d = (Vector2.new(pos.X,pos.Y) - Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2)).Magnitude
+                if d < dist then dist=d; closest=p end
             end
         end
-        if not encontrado then
-            root.CFrame = CFrame.new(isla.pos)
-        end
-        btn.BackgroundColor3 = Color3.fromRGB(0, 80, 200)
-        task.delay(1, function() btn.BackgroundColor3 = Color3.fromRGB(0, 20, 60) end)
-    end)
+    end
+    return closest
 end
 
-local t1 = crearTab("Coins", "💰", 8, pageCoins)
-crearTab("Move", "🏃", 64, pageMove)
-crearTab("TP", "🗺️", 120, pageTp)
-
-pageCoins.Visible = true
-t1.BackgroundColor3 = Color3.fromRGB(0, 80, 200)
-t1.TextColor3 = Color3.fromRGB(255, 255, 255)
-tabActiva = t1
-
-player.CharacterAdded:Connect(function()
-    if jumpConn then jumpConn:Disconnect(); jumpConn = nil end
+RunService.RenderStepped:Connect(function()
+    FOVCircle.Visible = FOVVis; FOVCircle.Position = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y/2); FOVCircle.Radius = FOV
+    if Aimbot then
+        local t = GetClosest()
+        if t and t.Character and t.Character.Head then Camera.CFrame = CFrame.lookAt(Camera.CFrame.Position, t.Character.Head.Position) end
+    end
 end)
+
+-- Silent Aim (mejorado para Arsenal)
+local mt = getrawmetatable(game); local old = mt.__namecall; setreadonly(mt,false)
+mt.__namecall = newcclosure(function(self, ...)
+    local args = {...}
+    if Silent and (self.Name:find("Shoot") or self.Name:find("Bullet") or self.Name:find("Fire")) then
+        local t = GetClosest()
+        if t and t.Character and t.Character.Head then args[2] = t.Character.Head.Position end
+    end
+    return old(self, unpack(args))
+end)
+setreadonly(mt, true)
+
+-- ESP
+local espCache = {}
+RunService.RenderStepped:Connect(function()
+    for _,p in Players:GetPlayers() do
+        if p\~=player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+            if not espCache[p] then
+                espCache[p] = {box=Drawing.new("Square"), name=Drawing.new("Text"), health=Drawing.new("Square"), dist=Drawing.new("Text"), line=Drawing.new("Line")}
+                local e = espCache[p]
+                e.box.Thickness=2; e.box.Color=Color3.fromRGB(0,100,255); e.box.Filled=false
+                e.name.Size=14; e.name.Color=Color3.fromRGB(0,100,255); e.name.Outline=true; e.name.Center=true
+                e.health.Color=Color3.fromRGB(0,255,0); e.health.Filled=true
+                e.dist.Size=13; e.dist.Color=Color3.fromRGB(0,100,255); e.dist.Outline=true; e.dist.Center=true
+                e.line.Thickness=1; e.line.Color=Color3.fromRGB(0,100,255)
+            end
+            local e = espCache[p]
+            local root = p.Character.HumanoidRootPart
+            local head = p.Character.Head
+            local hum = p.Character.Humanoid
+            local pos, on = Camera:WorldToViewportPoint(root.Position)
+            if on and ESP then
+                local t = Camera:WorldToViewportPoint(head.Position + Vector3.new(0,2,0))
+                local b = Camera:WorldToViewportPoint(root.Position - Vector3.new(0,3,0))
+                local h = b.Y - t.Y
+
+                if Box then e.box.Size=Vector2.new(h/2,h); e.box.Position=Vector2.new(t.X - e.box.Size.X/2, t.Y); e.box.Visible=true else e.box.Visible=false end
+                if Name then e.name.Text=p.Name; e.name.Position=Vector2.new(t.X, t.Y-20); e.name.Visible=true else e.name.Visible=false end
+                if Health then local hp = hum.Health/hum.MaxHealth; e.health.Size=Vector2.new(3,h*hp); e.health.Position=Vector2.new(t.X-e.box.Size.X/2-6, t.Y + h*(1-hp)); e.health.Visible=true else e.health.Visible=false end
+                if Dist then local d = math.floor((root.Position - (player.Character and player.Character.HumanoidRootPart.Position or Vector3.new())).Magnitude); e.dist.Text=d.."m"; e.dist.Position=Vector2.new(b.X, b.Y+5); e.dist.Visible=true else e.dist.Visible=false end
+                if Line then e.line.From=Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y); e.line.To=Vector2.new(pos.X,pos.Y); e.line.Visible=true else e.line.Visible=false end
+            else
+                for _,v in pairs(e) do v.Visible=false end
+            end
+        end
+    end
+end)
+
+-- Movement
+RunService.RenderStepped:Connect(function()
+    if player.Character and player.Character:FindFirstChild("Humanoid") then
+        local h = player.Character.Humanoid
+        if SpeedE then h.WalkSpeed = SpeedV end
+        if JumpE and UserInputService:IsKeyDown(Enum.KeyCode.Space) then h.JumpPower = JumpP end
+    end
+end)
+
+local noclipConn = RunService.Stepped:Connect(function()
+    if Noclip and player.Character then
+        for _,part in player.Character:GetDescendants() do if part:IsA("BasePart") then part.CanCollide = false end end
+    end
+end)
+
+player.CharacterAdded:Connect(function() task.wait(1); if SpeedE and player.Character and player.Character:FindFirstChild("Humanoid") then player.Character.Humanoid.WalkSpeed = SpeedV end end)
+
+-- ==================== PESTAÑAS ====================
+local combat = crearPagina(); table.insert(pages, combat)
+crearToggle(combat, "Aimbot", 10, function(v) Aimbot = v end)
+crearToggle(combat, "FOV Visible", 64, function(v) FOVVis = v end)
+crearSlider(combat, "FOV Size", 118, 30, 200, 120, function(v) FOV = v end)
+crearToggle(combat, "Silent Aim", 182, function(v) Silent = v end)
+
+local espPage = crearPagina(); table.insert(pages, espPage)
+crearToggle(espPage, "ESP", 10, function(v) ESP = v end)
+crearToggle(espPage, "ESP Name", 64, function(v) Name = v end)
+crearToggle(espPage, "ESP Health", 118, function(v) Health = v end)
+crearToggle(espPage, "ESP Box", 172, function(v) Box = v end)
+crearToggle(espPage, "ESP Distance", 226, function(v) Dist = v end)
+crearToggle(espPage, "ESP Line", 280, function(v) Line = v end)
+
+local extra = crearPagina(); table.insert(pages, extra)
+crearToggle(extra, "Speed", 10, function(v) SpeedE = v end)
+crearSlider(extra, "Speed Value", 64, 16, 100, 50, function(v) SpeedV = v end)
+crearToggle(extra, "Noclip", 128, function(v) Noclip = v end)
+crearToggle(extra, "Super Jump", 182, function(v) JumpE = v end)
+crearSlider(extra, "Jump Power", 236, 50, 300, 100, function(v) JumpP = v end)
+
+-- Tabs
+crearTab("Combat", "⚔️", 8, combat)
+crearTab("ESP", "👁️", 70, espPage)
+crearTab("Extra", "⭐", 132, extra)
+
+combat.Visible = true
